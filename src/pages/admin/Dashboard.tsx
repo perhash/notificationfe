@@ -7,7 +7,7 @@ import { AddCustomerDialog } from "@/components/admin/AddCustomerDialog";
 import NotificationForm from "@/components/NotificationForm";
 import PWAStatus from "@/components/PWAStatus";
 import MobilePushNotification from "@/components/MobilePushNotification";
-import SimplePushTest from "@/components/SimplePushTest";
+import AndroidIOSPushTest from "@/components/AndroidIOSPushTest";
 import { apiService } from "@/services/api";
 import { useEffect, useState } from "react";
 
@@ -220,8 +220,8 @@ const AdminDashboard = () => {
         {/* Mobile Push Notifications */}
         <MobilePushNotification />
 
-        {/* Simple Push Test */}
-        <SimplePushTest />
+        {/* Android & iOS Push Test */}
+        <AndroidIOSPushTest />
       </div>
     </div>
   );
