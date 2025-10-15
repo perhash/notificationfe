@@ -9,6 +9,11 @@ export const getApiBaseUrl = (): string => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
+  // Production fallback to your Vercel backend
+  if (import.meta.env.PROD) {
+    return 'https://notificationbe.vercel.app/api';
+  }
+  
   // Fallback to localhost for development
   return 'http://localhost:5000/api';
 };

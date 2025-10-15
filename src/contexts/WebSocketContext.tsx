@@ -29,7 +29,27 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
   useEffect(() => {
     // Initialize socket connection
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const getSocketUrl = () => {
+      // Use environment variable for production
+      if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+      }
+      
+      // For Vercel deployment, use the backend URL
+      if (import.meta.env.VITE_API_BASE_URL) {
+        return import.meta.env.VITE_API_BASE_URL.replace('/api', '');
+      }
+      
+      // Production fallback to your Vercel backend
+      if (import.meta.env.PROD) {
+        return 'https://notificationbe.vercel.app';
+      }
+      
+      // Fallback to localhost for development
+      return 'http://localhost:5000';
+    };
+    
+    const socketUrl = getSocketUrl();
     console.log('🔌 Connecting to WebSocket:', socketUrl);
     
     const newSocket = io(socketUrl, {
