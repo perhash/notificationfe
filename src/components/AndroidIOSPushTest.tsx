@@ -220,7 +220,7 @@ const AndroidIOSPushTest = () => {
         addResult(`Trying ${method}...`);
         
         try {
-          const vapidKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0FyHnQ3UzHfe3E3X5gQ7MvL8iJ8qK1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6';
+          const vapidKey = 'BKC-Rx_iHQmzrNPKUpdM3Y7P3kmONr5vhFj9GB1keySlPoePXzP82b7Bv_JRaLb946g8qwVgqwjuAIVwnkQtx50';
           const applicationServerKey = urlBase64ToUint8Array(vapidKey);
           
           subscription = await registration.pushManager.subscribe({
@@ -244,17 +244,23 @@ const AndroidIOSPushTest = () => {
           }
         }
       } else if (deviceInfo?.isIOS && deviceInfo?.isSafari) {
-        // iOS Safari - try without VAPID
-        method = 'iOS Safari without VAPID';
+        // iOS Safari - requires VAPID key
+        method = 'iOS Safari with VAPID';
         addResult(`Trying ${method}...`);
         
         try {
+          const vapidKey = 'BKC-Rx_iHQmzrNPKUpdM3Y7P3kmONr5vhFj9GB1keySlPoePXzP82b7Bv_JRaLb946g8qwVgqwjuAIVwnkQtx50';
+          const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+          
           subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
           });
           addResult(`✅ ${method} successful`);
         } catch (error) {
           addResult(`❌ ${method} failed: ${error.message}`);
+          addResult('ℹ️ iOS requires a valid VAPID key for push subscriptions');
+          addResult('ℹ️ The current VAPID key is a placeholder and may not work');
         }
       } else {
         // Other browsers - try both methods
@@ -262,7 +268,7 @@ const AndroidIOSPushTest = () => {
         addResult(`Trying ${method}...`);
         
         try {
-          const vapidKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0FyHnQ3UzHfe3E3X5gQ7MvL8iJ8qK1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6';
+          const vapidKey = 'BKC-Rx_iHQmzrNPKUpdM3Y7P3kmONr5vhFj9GB1keySlPoePXzP82b7Bv_JRaLb946g8qwVgqwjuAIVwnkQtx50';
           const applicationServerKey = urlBase64ToUint8Array(vapidKey);
           
           subscription = await registration.pushManager.subscribe({
