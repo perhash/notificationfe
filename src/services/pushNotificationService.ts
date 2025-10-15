@@ -10,16 +10,30 @@ class PushNotificationService {
       return 'denied';
     }
 
-    if (Notification.permission === 'granted') {
+    // Check current permission
+    const currentPermission = Notification.permission;
+    console.log('Current notification permission:', currentPermission);
+
+    if (currentPermission === 'granted') {
+      console.log('Notification permission already granted');
       return 'granted';
     }
 
-    if (Notification.permission === 'denied') {
+    if (currentPermission === 'denied') {
+      console.log('Notification permission was previously denied');
       return 'denied';
     }
 
-    const permission = await Notification.requestPermission();
-    return permission;
+    // Request permission
+    try {
+      console.log('Requesting notification permission...');
+      const permission = await Notification.requestPermission();
+      console.log('Permission request result:', permission);
+      return permission;
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return 'denied';
+    }
   }
 
   async subscribeToPush(): Promise<PushSubscription | null> {

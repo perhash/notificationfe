@@ -19,9 +19,13 @@ const MobilePushNotification = () => {
   }, []);
 
   const checkSupport = () => {
-    const supported = 'Notification' in window && 
-                     'serviceWorker' in navigator && 
-                     'PushManager' in window;
+    // More comprehensive support check
+    const hasNotification = 'Notification' in window;
+    const hasServiceWorker = 'serviceWorker' in navigator;
+    const hasPushManager = 'PushManager' in window;
+    const hasNavigator = 'navigator' in window;
+    
+    const supported = hasNotification && hasServiceWorker && hasPushManager && hasNavigator;
     setIsSupported(supported);
     
     // Get device info
@@ -29,11 +33,32 @@ const MobilePushNotification = () => {
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     const isIOS = /iPad|iPhone|iPod/.test(userAgent);
     const isAndroid = /Android/.test(userAgent);
+    const isChrome = /Chrome/.test(userAgent);
+    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+    const isFirefox = /Firefox/.test(userAgent);
     
     setDeviceInfo({
       isMobile,
       isIOS,
       isAndroid,
+      isChrome,
+      isSafari,
+      isFirefox,
+      userAgent,
+      supportDetails: {
+        hasNotification,
+        hasServiceWorker,
+        hasPushManager,
+        hasNavigator
+      }
+    });
+    
+    console.log('Support check:', {
+      supported,
+      hasNotification,
+      hasServiceWorker,
+      hasPushManager,
+      hasNavigator,
       userAgent
     });
   };
@@ -64,17 +89,37 @@ const MobilePushNotification = () => {
 
     setIsLoading(true);
     try {
+      // Check current permission first
+      const currentPermission = Notification.permission;
+      console.log('Current permission:', currentPermission);
+      
+      if (currentPermission === 'granted') {
+        setPermission('granted');
+        toast.success('Notification permission already granted!');
+        return;
+      }
+      
+      if (currentPermission === 'denied') {
+        setPermission('denied');
+        toast.error('Notification permission was previously denied. Please enable it in your browser settings.');
+        return;
+      }
+
+      // Request permission
       const permission = await Notification.requestPermission();
+      console.log('Permission result:', permission);
       setPermission(permission);
       
       if (permission === 'granted') {
         toast.success('Notification permission granted!');
+      } else if (permission === 'denied') {
+        toast.error('Notification permission denied. Please enable notifications in your browser settings and refresh the page.');
       } else {
-        toast.error('Notification permission denied');
+        toast.error('Notification permission request was dismissed. Please try again.');
       }
     } catch (error) {
       console.error('Error requesting permission:', error);
-      toast.error('Failed to request permission');
+      toast.error('Failed to request permission. Please check your browser settings.');
     } finally {
       setIsLoading(false);
     }
@@ -290,8 +335,24 @@ const MobilePushNotification = () => {
           <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
             <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
             <div className="text-xs text-yellow-800 dark:text-yellow-200">
-              Push notifications are not supported on this device or browser. 
-              Try using Chrome, Firefox, or Safari on a mobile device.
+              <div className="font-medium mb-1">Push notifications not supported</div>
+              <div className="space-y-1">
+                {deviceInfo?.isIOS && !deviceInfo?.isSafari && (
+                  <div>• Use Safari browser on iOS (not Chrome)</div>
+                )}
+                {deviceInfo?.isAndroid && !deviceInfo?.isChrome && (
+                  <div>• Try Chrome browser on Android</div>
+                )}
+                <div>• Make sure you're using HTTPS</div>
+                <div>• Try refreshing the page</div>
+                {deviceInfo?.supportDetails && (
+                  <div className="mt-2 text-xs opacity-75">
+                    Support: Notifications: {deviceInfo.supportDetails.hasNotification ? '✓' : '✗'}, 
+                    ServiceWorker: {deviceInfo.supportDetails.hasServiceWorker ? '✓' : '✗'}, 
+                    PushManager: {deviceInfo.supportDetails.hasPushManager ? '✓' : '✗'}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -300,8 +361,29 @@ const MobilePushNotification = () => {
           <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
             <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
             <div className="text-xs text-red-800 dark:text-red-200">
-              Notification permission was denied. Please enable notifications 
-              in your browser settings and refresh the page.
+              <div className="font-medium mb-1">Notification permission denied</div>
+              <div className="space-y-1">
+                <div>• Go to browser settings</div>
+                <div>• Find "Notifications" or "Site Settings"</div>
+                <div>• Enable notifications for this site</div>
+                <div>• Refresh the page and try again</div>
+                {deviceInfo?.isIOS && (
+                  <div>• On iOS: Settings → Safari → Notifications</div>
+                )}
+                {deviceInfo?.isAndroid && (
+                  <div>• On Android: Chrome → Settings → Site Settings → Notifications</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isSupported && permission === 'default' && (
+          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+            <div className="text-xs text-blue-800 dark:text-blue-200">
+              <div className="font-medium mb-1">Ready to enable notifications</div>
+              <div>Click "Request Permission" to enable push notifications for this app.</div>
             </div>
           </div>
         )}
