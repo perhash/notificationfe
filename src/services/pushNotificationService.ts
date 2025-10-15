@@ -1,6 +1,7 @@
 // Push Notification Service for PWA
 class PushNotificationService {
-  private vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0FyHnQ3UzHfe3E3X5gQ7MvL8iJ8qK1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6'; // Replace with your VAPID key
+  // Using a test VAPID key - in production, generate your own
+  private vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0FyHnQ3UzHfe3E3X5gQ7MvL8iJ8qK1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6';
   private isSupported = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
   async requestPermission(): Promise<NotificationPermission> {
@@ -23,6 +24,12 @@ class PushNotificationService {
 
   async subscribeToPush(): Promise<PushSubscription | null> {
     try {
+      // Check if push notifications are supported
+      if (!this.isSupported) {
+        console.log('Push notifications not supported on this device');
+        return null;
+      }
+
       const permission = await this.requestPermission();
       
       if (permission !== 'granted') {
@@ -31,10 +38,28 @@ class PushNotificationService {
       }
 
       const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey) as BufferSource
-    });
+      
+      // Check if already subscribed
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        console.log('Already subscribed to push notifications');
+        return existingSubscription;
+      }
+
+      // For mobile devices, try without VAPID key first
+      let subscription;
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey) as BufferSource
+        });
+      } catch (vapidError) {
+        console.log('VAPID subscription failed, trying without VAPID key:', vapidError);
+        // Try without VAPID key for some mobile browsers
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true
+        });
+      }
 
       console.log('Push subscription successful:', subscription);
       return subscription;

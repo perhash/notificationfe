@@ -6,6 +6,7 @@ import { CreateOrderDialog } from "@/components/admin/CreateOrderDialog";
 import { AddCustomerDialog } from "@/components/admin/AddCustomerDialog";
 import NotificationForm from "@/components/NotificationForm";
 import PWAStatus from "@/components/PWAStatus";
+import MobilePushNotification from "@/components/MobilePushNotification";
 import { apiService } from "@/services/api";
 import { useEffect, useState } from "react";
 
@@ -201,7 +202,7 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Notification Form for Testing */}
         <Card>
           <CardHeader>
@@ -214,6 +215,9 @@ const AdminDashboard = () => {
 
         {/* PWA Status */}
         <PWAStatus />
+
+        {/* Mobile Push Notifications */}
+        <MobilePushNotification />
       </div>
     </div>
   );

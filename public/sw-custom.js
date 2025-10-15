@@ -29,12 +29,29 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
   
+  let data = { title: 'Smart Supply', message: 'You have a new notification!' };
+  
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (error) {
+    console.log('Error parsing push data, using text:', error);
+    if (event.data) {
+      data.message = event.data.text();
+    }
+  }
+
   const options = {
-    body: event.data ? event.data.text() : 'You have a new notification',
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
-    vibrate: [100, 50, 100],
+    body: data.message || 'You have a new notification',
+    icon: data.icon || '/pwa-192x192.png',
+    badge: data.badge || '/pwa-192x192.png',
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    tag: 'smart-supply-notification',
     data: {
+      url: data.url || '/',
+      notificationId: data.notificationId || Date.now(),
       dateOfArrival: Date.now(),
       primaryKey: 1
     },
@@ -53,7 +70,13 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Smart Supply', options)
+    self.registration.showNotification(data.title || 'Smart Supply', options)
+      .then(() => {
+        console.log('Notification shown successfully');
+      })
+      .catch((error) => {
+        console.error('Error showing notification:', error);
+      })
   );
 });
 
