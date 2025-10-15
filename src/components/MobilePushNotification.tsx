@@ -126,27 +126,40 @@ const MobilePushNotification = () => {
   };
 
   const subscribe = async () => {
-    if (!isSupported || permission !== 'granted') {
-      toast.error('Cannot subscribe: notifications not supported or permission not granted');
+    if (!isSupported) {
+      toast.error('Push notifications not supported on this device');
+      return;
+    }
+
+    if (permission !== 'granted') {
+      toast.error('Notification permission not granted. Please request permission first.');
       return;
     }
 
     setIsLoading(true);
     try {
+      console.log('Starting subscription process...');
+      
+      // Wait for service worker to be ready
       const registration = await navigator.serviceWorker.ready;
+      console.log('Service worker ready:', registration);
       
       // Check if already subscribed
       const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
+        console.log('Already subscribed:', existingSubscription);
         setIsSubscribed(true);
         toast.info('Already subscribed to push notifications');
         return;
       }
 
-      // Try to subscribe
-      let subscription;
+      // Try multiple subscription methods
+      let subscription = null;
+      let lastError = null;
+
+      // Method 1: Try with VAPID key
       try {
-        // Try with VAPID key first
+        console.log('Trying subscription with VAPID key...');
         const vapidKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI0FyHnQ3UzHfe3E3X5gQ7MvL8iJ8qK1L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6';
         const applicationServerKey = urlBase64ToUint8Array(vapidKey);
         
@@ -154,25 +167,73 @@ const MobilePushNotification = () => {
           userVisibleOnly: true,
           applicationServerKey: applicationServerKey
         });
+        console.log('VAPID subscription successful:', subscription);
       } catch (vapidError) {
-        console.log('VAPID subscription failed, trying without VAPID key:', vapidError);
-        
-        // Try without VAPID key for some mobile browsers
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true
-        });
+        console.log('VAPID subscription failed:', vapidError);
+        lastError = vapidError;
+      }
+
+      // Method 2: Try without VAPID key
+      if (!subscription) {
+        try {
+          console.log('Trying subscription without VAPID key...');
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true
+          });
+          console.log('Non-VAPID subscription successful:', subscription);
+        } catch (noVapidError) {
+          console.log('Non-VAPID subscription failed:', noVapidError);
+          lastError = noVapidError;
+        }
+      }
+
+      // Method 3: Try with minimal options
+      if (!subscription) {
+        try {
+          console.log('Trying subscription with minimal options...');
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true
+          });
+          console.log('Minimal subscription successful:', subscription);
+        } catch (minimalError) {
+          console.log('Minimal subscription failed:', minimalError);
+          lastError = minimalError;
+        }
       }
 
       if (subscription) {
         setIsSubscribed(true);
         toast.success('Successfully subscribed to push notifications!');
-        console.log('Subscription:', subscription);
+        console.log('Final subscription:', subscription);
+        
+        // Try to send subscription to server
+        try {
+          const response = await fetch('/api/notifications/subscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              subscription: subscription.toJSON(),
+              userId: 'test-user' // You might want to get this from auth
+            })
+          });
+          
+          if (response.ok) {
+            console.log('Subscription sent to server successfully');
+          } else {
+            console.log('Failed to send subscription to server:', response.status);
+          }
+        } catch (serverError) {
+          console.log('Error sending subscription to server:', serverError);
+        }
       } else {
-        toast.error('Failed to subscribe to push notifications');
+        console.error('All subscription methods failed. Last error:', lastError);
+        toast.error(`Failed to subscribe: ${lastError?.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error subscribing:', error);
-      toast.error('Failed to subscribe to push notifications');
+      console.error('Error in subscription process:', error);
+      toast.error(`Subscription failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -254,9 +315,27 @@ const MobilePushNotification = () => {
               <div>Mobile: {deviceInfo.isMobile ? 'Yes' : 'No'}</div>
               <div>iOS: {deviceInfo.isIOS ? 'Yes' : 'No'}</div>
               <div>Android: {deviceInfo.isAndroid ? 'Yes' : 'No'}</div>
+              <div>Chrome: {deviceInfo.isChrome ? 'Yes' : 'No'}</div>
+              <div>Safari: {deviceInfo.isSafari ? 'Yes' : 'No'}</div>
+              <div>Firefox: {deviceInfo.isFirefox ? 'Yes' : 'No'}</div>
             </div>
           </div>
         )}
+
+        {/* Debug Info */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">Debug Info</span>
+          </div>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div>HTTPS: {window.location.protocol === 'https:' ? 'Yes' : 'No'}</div>
+            <div>Service Worker: {navigator.serviceWorker ? 'Available' : 'Not Available'}</div>
+            <div>Push Manager: {navigator.serviceWorker && 'PushManager' in window ? 'Available' : 'Not Available'}</div>
+            <div>Notification API: {'Notification' in window ? 'Available' : 'Not Available'}</div>
+            <div>User Agent: {navigator.userAgent.substring(0, 50)}...</div>
+          </div>
+        </div>
 
         {/* Support Status */}
         <div className="space-y-2">
