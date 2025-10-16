@@ -73,3 +73,4 @@ Check Vercel deployment logs for:
 4. Environment variable issues
 
 The simplified configuration should resolve most Vercel deployment issues!
+

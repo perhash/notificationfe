@@ -216,3 +216,4 @@ navigator.serviceWorker.ready.then(registration => {
 5. **Contact Support**: Provide console logs and device info
 
 The enhanced troubleshooting should help identify and fix most push notification issues!
+

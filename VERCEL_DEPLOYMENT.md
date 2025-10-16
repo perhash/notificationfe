@@ -90,3 +90,4 @@ const allowedOrigins = [
 - [ ] Push notifications working
 - [ ] PWA installable
 - [ ] Offline functionality tested
+

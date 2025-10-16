@@ -274,3 +274,4 @@ const SimplePushTest = () => {
 };
 
 export default SimplePushTest;
+

@@ -17,3 +17,4 @@ module.exports = {
   vapidKeys,
   TEST_VAPID_PUBLIC_KEY
 };
+

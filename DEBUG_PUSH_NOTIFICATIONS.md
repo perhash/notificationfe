@@ -175,3 +175,4 @@ navigator.serviceWorker.ready.then(reg => {
 5. **Check Settings**: Make sure notifications are enabled
 
 The Simple Push Test component will show exactly where the process is failing!
+

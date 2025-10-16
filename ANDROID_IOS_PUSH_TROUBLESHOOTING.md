@@ -216,3 +216,4 @@ navigator.serviceWorker.ready.then(reg => {
 6. **Check Settings**: Make sure notifications are enabled
 
 The Android & iOS Push Test component will show exactly what's working and what's not!
+

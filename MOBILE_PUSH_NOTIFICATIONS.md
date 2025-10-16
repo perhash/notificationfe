@@ -133,3 +133,4 @@ The Mobile Push Notification component shows:
 5. Check console for errors
 
 The enhanced push notification system should now work much better on mobile devices!
+

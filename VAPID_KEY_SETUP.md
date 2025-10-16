@@ -101,3 +101,4 @@ But for production, you should generate your own keys.
 - ✅ Both VAPID and non-VAPID methods should work
 
 The VAPID key is the missing piece for iOS push notifications!
+
